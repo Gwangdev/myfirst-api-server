@@ -1,17 +1,16 @@
-# 01.spring-backend-v1.0 Service
-# - 클러스터 내부에서만 접근 가능한 ClusterIP로 노출한다.
-# - 외부 진입점(Ingress)은 03.frontend 쪽에만 두고, 01은 03.frontend(nginx)를 통해서만 접근한다.
-# - 이름을 "backend"로 둔 이유: 03.frontend의 nginx 설정(default.conf)이
-#   http://backend:8080 으로 프록시하기 때문에 Service 이름이 반드시 일치해야 한다.
+# 02.fastapi-backend-v2.0 Service
+# - 01.spring-backend-v1.0/k8s/service.yaml과 동일한 ClusterIP 구성이며, 이름(라벨)만 "backend-v2"로 다르게 한다.
+# - 참고: 03.frontend의 system.html은 이 Service를 거치지 않고 브라우저가 02를 "직접" 호출한다(CORS 방식).
+#   이 Service는 클러스터 내부의 다른 컴포넌트가 02를 호출할 때 backend-v2:8080 으로 사용하면 된다.
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{USER_NAME}}-{{SERVICE_NAME}}
+  name: {{USER_NAME}}-myfirst-api-server
   namespace: {{NAMESPACE}}
 spec:
   type: ClusterIP
   selector:
-    app: {{USER_NAME}}-{{SERVICE_NAME}}
+    app: {{USER_NAME}}-myfirst-api-server
   ports:
     - name: http
       port: 8080

@@ -1,27 +1,18 @@
-# 베이스 이미지로 OpenJDK 17 버전의 JRE 이미지 사용
-#FROM openjdk:26-ea-21-jdk-slim
-#FROM eclipse-temurin:21-jre
-FROM skala-registry.skala-ai.com/library/eclipse-temurin:21-jre
+FROM python:3.11-alpine
 
+# pip 경고 억제 환경 변수 설정
+ENV PIP_ROOT_USER_ACTION=ignore
 
-# 작업 디렉토리 설정
-WORKDIR /app
+RUN apk add --no-cache bash curl gcc musl-dev linux-headers jq
 
-# 외부에서 컨테이너의 8080 포트에 접근할 수 있도록 설정
-EXPOSE 8080
-EXPOSE 8081
+# FastAPI 및 기타 라이브러리 설치
+RUN pip install --upgrade pip && \
+    pip install flask requests && \
+    pip install fastapi uvicorn psutil python-multipart && \
+    pip install psutil prometheus-client && \ 
+    pip install email-validator
 
-# JVM 힙 메모리 고정 설정 (load-memory 64MB 할당 + JVM 오버헤드 확보)
-# k8s env로 오버라이드 가능: - name: JAVA_OPTS
-#                              value: "-Xms256m -Xmx512m"
-#ENV JAVA_OPTS="-Xms256m -Xmx512m"
+# lifecycle (prob, healthz, metrics) 테스트를 위한 코드 추가
+COPY fastserver.py fastserver.py
 
-# 외부에서 받아들일 변수 선언
-#ARG JAR_FILE
-
-# 애플리케이션의 jar 파일을 컨테이너에 추가
-#ADD ${JAR_FILE}  app.jar
-ADD ./target/*.jar  app.jar
-
-# 애플리케이션 실행 (JAVA_OPTS 환경변수 적용)
-CMD ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]
+CMD ["python3", "fastserver.py"]
